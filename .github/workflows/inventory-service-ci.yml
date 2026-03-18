@@ -1,0 +1,35 @@
+name: Inventory Service CI
+
+on:
+  push:
+    paths:
+      - "inventory-service/**"
+      - ".github/workflows/inventory-service-ci.yml"
+  pull_request:
+    paths:
+      - "inventory-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: inventory-service
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Make Maven Wrapper executable
+        run: chmod +x mvnw
+
+      - name: Run tests
+        run: ./mvnw clean test

@@ -1,7 +1,9 @@
 package com.inventory.inventory.adapter.input.controller;
 
+import com.inventory.inventory.adapter.input.controller.mapper.InventoryWebMapper;
 import com.inventory.inventory.adapter.input.controller.request.CreateInventoryRequest;
 import com.inventory.inventory.adapter.input.controller.request.StockMovementRequest;
+import com.inventory.inventory.adapter.input.controller.response.InventoryResponse;
 import com.inventory.inventory.application.dto.command.AddStockCommand;
 import com.inventory.inventory.application.dto.command.CreateInventoryCommand;
 import com.inventory.inventory.application.dto.command.ReleaseReservedStockCommand;
@@ -9,6 +11,7 @@ import com.inventory.inventory.application.dto.command.RemoveStockCommand;
 import com.inventory.inventory.application.dto.command.ReserveStockCommand;
 import com.inventory.inventory.application.dto.result.InventoryResult;
 import com.inventory.inventory.application.usecase.InventoryUseCase;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,64 +30,79 @@ public class InventoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public InventoryResult create(@RequestBody CreateInventoryRequest request) {
-        return inventoryUseCase.create(
+    public InventoryResponse create(@RequestBody @Valid CreateInventoryRequest request) {
+        InventoryResult result = inventoryUseCase.create(
                 new CreateInventoryCommand(request.productId())
         );
+
+        return InventoryWebMapper.toResponse(result);
     }
 
     @GetMapping
-    public List<InventoryResult> findAll() {
-        return inventoryUseCase.findAll();
+    public List<InventoryResponse> findAll() {
+        return inventoryUseCase.findAll()
+                .stream()
+                .map(InventoryWebMapper::toResponse)
+                .toList();
     }
 
     @GetMapping("/{inventoryId}")
-    public InventoryResult findById(@PathVariable UUID inventoryId) {
-        return inventoryUseCase.findById(inventoryId);
+    public InventoryResponse findById(@PathVariable UUID inventoryId) {
+        InventoryResult result = inventoryUseCase.findById(inventoryId);
+        return InventoryWebMapper.toResponse(result);
     }
 
     @GetMapping("/product/{productId}")
-    public InventoryResult findByProductId(@PathVariable UUID productId) {
-        return inventoryUseCase.findByProductId(productId);
+    public InventoryResponse findByProductId(@PathVariable UUID productId) {
+        InventoryResult result = inventoryUseCase.findByProductId(productId);
+        return InventoryWebMapper.toResponse(result);
     }
 
     @PatchMapping("/product/{productId}/add-stock")
-    public InventoryResult addStock(
+    public InventoryResponse addStock(
             @PathVariable UUID productId,
-            @RequestBody StockMovementRequest request
+            @RequestBody @Valid StockMovementRequest request
     ) {
-        return inventoryUseCase.addStock(
+        InventoryResult result = inventoryUseCase.addStock(
                 new AddStockCommand(productId, request.quantity())
         );
+
+        return InventoryWebMapper.toResponse(result);
     }
 
     @PatchMapping("/product/{productId}/remove-stock")
-    public InventoryResult removeStock(
+    public InventoryResponse removeStock(
             @PathVariable UUID productId,
-            @RequestBody StockMovementRequest request
+            @RequestBody @Valid StockMovementRequest request
     ) {
-        return inventoryUseCase.removeStock(
+        InventoryResult result = inventoryUseCase.removeStock(
                 new RemoveStockCommand(productId, request.quantity())
         );
+
+        return InventoryWebMapper.toResponse(result);
     }
 
     @PatchMapping("/product/{productId}/reserve-stock")
-    public InventoryResult reserveStock(
+    public InventoryResponse reserveStock(
             @PathVariable UUID productId,
-            @RequestBody StockMovementRequest request
+            @RequestBody @Valid StockMovementRequest request
     ) {
-        return inventoryUseCase.reserveStock(
+        InventoryResult result = inventoryUseCase.reserveStock(
                 new ReserveStockCommand(productId, request.quantity())
         );
+
+        return InventoryWebMapper.toResponse(result);
     }
 
     @PatchMapping("/product/{productId}/release-reserved-stock")
-    public InventoryResult releaseReservedStock(
+    public InventoryResponse releaseReservedStock(
             @PathVariable UUID productId,
-            @RequestBody StockMovementRequest request
+            @RequestBody @Valid StockMovementRequest request
     ) {
-        return inventoryUseCase.releaseReservedStock(
+        InventoryResult result = inventoryUseCase.releaseReservedStock(
                 new ReleaseReservedStockCommand(productId, request.quantity())
         );
+
+        return InventoryWebMapper.toResponse(result);
     }
 }

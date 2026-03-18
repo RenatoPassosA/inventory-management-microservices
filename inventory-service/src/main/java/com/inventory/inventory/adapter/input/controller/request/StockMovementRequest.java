@@ -1,4 +1,10 @@
 package com.inventory.inventory.adapter.input.controller.request;
 
-public record StockMovementRequest(Integer quantity) {
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+public record StockMovementRequest(
+        @NotNull(message = "A quantidade é obrigatória")
+        @Positive(message = "A quantidade deve ser maior que zero")
+        Integer quantity) {
 }
