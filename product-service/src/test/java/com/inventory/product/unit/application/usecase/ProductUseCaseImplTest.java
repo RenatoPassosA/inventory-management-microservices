@@ -1,8 +1,8 @@
 package com.inventory.product.unit.application.usecase;
 
-import com.inventory.product.application.dto.request.CreateProductRequest;
-import com.inventory.product.application.dto.request.UpdateProductRequest;
-import com.inventory.product.application.dto.response.ProductResponse;
+import com.inventory.product.application.dto.command.CreateProductCommand;
+import com.inventory.product.application.dto.command.UpdateProductCommand;
+import com.inventory.product.application.dto.result.ProductResult;
 import com.inventory.product.application.usecase.impl.ProductUseCaseImpl;
 import com.inventory.product.domain.enums.ProductStatus;
 import com.inventory.product.domain.exceptions.ProductAlreadyExistsException;
@@ -34,7 +34,7 @@ class ProductUseCaseImplTest {
 
     @Test
     void shouldCreateProductSuccessfully() {
-        CreateProductRequest request = new CreateProductRequest(
+        CreateProductCommand command = new CreateProductCommand(
                 "Notebook Dell",
                 "Notebook para trabalho",
                 "DELL-001",
@@ -43,10 +43,10 @@ class ProductUseCaseImplTest {
 
         Product savedProduct = new Product(
                 UUID.randomUUID(),
-                request.getName(),
-                request.getDescription(),
-                request.getSku(),
-                request.getCategory(),
+                command.getName(),
+                command.getDescription(),
+                command.getSku(),
+                command.getCategory(),
                 ProductStatus.ACTIVE,
                 LocalDateTime.now(),
                 LocalDateTime.now()
@@ -55,11 +55,11 @@ class ProductUseCaseImplTest {
         when(productRepository.existsBySku("DELL-001")).thenReturn(false);
         when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
 
-        ProductResponse response = productUseCase.create(request);
+        ProductResult result = productUseCase.create(command);
 
-        assertNotNull(response);
-        assertEquals("Notebook Dell", response.getName());
-        assertEquals("DELL-001", response.getSku());
+        assertNotNull(result);
+        assertEquals("Notebook Dell", result.getName());
+        assertEquals("DELL-001", result.getSku());
 
         verify(productRepository).existsBySku("DELL-001");
         verify(productRepository).save(any(Product.class));
@@ -67,7 +67,7 @@ class ProductUseCaseImplTest {
 
     @Test
     void shouldThrowExceptionWhenSkuAlreadyExists() {
-        CreateProductRequest request = new CreateProductRequest(
+        CreateProductCommand command = new CreateProductCommand(
                 "Notebook Dell",
                 "Notebook para trabalho",
                 "DELL-001",
@@ -76,7 +76,7 @@ class ProductUseCaseImplTest {
 
         when(productRepository.existsBySku("DELL-001")).thenReturn(true);
 
-        assertThrows(ProductAlreadyExistsException.class, () -> productUseCase.create(request));
+        assertThrows(ProductAlreadyExistsException.class, () -> productUseCase.create(command));
 
         verify(productRepository).existsBySku("DELL-001");
         verify(productRepository, never()).save(any(Product.class));
@@ -99,10 +99,10 @@ class ProductUseCaseImplTest {
 
         when(productRepository.findById(id)).thenReturn(Optional.of(product));
 
-        ProductResponse response = productUseCase.findById(id);
+        ProductResult result = productUseCase.findById(id);
 
-        assertNotNull(response);
-        assertEquals(id, response.getId());
+        assertNotNull(result);
+        assertEquals(id, result.getId());
     }
 
     @Test
@@ -112,6 +112,30 @@ class ProductUseCaseImplTest {
         when(productRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(ProductNotFoundException.class, () -> productUseCase.findById(id));
+    }
+
+    @Test
+    void shouldFindProductBySku() {
+        Product product = new Product(
+                UUID.randomUUID(),
+                "Notebook Dell",
+                "Notebook para trabalho",
+                "DELL-001",
+                "INFORMATICA",
+                ProductStatus.ACTIVE,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(productRepository.findBySku("DELL-001")).thenReturn(Optional.of(product));
+
+        ProductResult result = productUseCase.findBySku("DELL-001");
+
+        assertNotNull(result);
+        assertEquals("DELL-001", result.getSku());
+        assertEquals("Notebook Dell", result.getName());
+
+        verify(productRepository).findBySku("DELL-001");
     }
 
     @Test
@@ -138,7 +162,8 @@ class ProductUseCaseImplTest {
                 LocalDateTime.now()
         );
 
-        UpdateProductRequest request = new UpdateProductRequest(
+        UpdateProductCommand command = new UpdateProductCommand(
+                id,
                 "Notebook Novo",
                 "Desc nova",
                 "INFORMATICA"
@@ -147,17 +172,18 @@ class ProductUseCaseImplTest {
         when(productRepository.findById(id)).thenReturn(Optional.of(product));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProductResponse response = productUseCase.update(id, request);
+        ProductResult result = productUseCase.update(id, command);
 
-        assertEquals("Notebook Novo", response.getName());
-        assertEquals("INFORMATICA", response.getCategory());
+        assertEquals("Notebook Novo", result.getName());
+        assertEquals("INFORMATICA", result.getCategory());
     }
 
     @Test
     void shouldThrowWhenProductNotFoundOnUpdate() {
         UUID id = UUID.randomUUID();
 
-        UpdateProductRequest request = new UpdateProductRequest(
+        UpdateProductCommand command = new UpdateProductCommand(
+                id,
                 "Notebook Novo",
                 "Descrição nova",
                 "INFORMATICA"
@@ -165,7 +191,7 @@ class ProductUseCaseImplTest {
 
         when(productRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(ProductNotFoundException.class, () -> productUseCase.update(id, request));
+        assertThrows(ProductNotFoundException.class, () -> productUseCase.update(id, command));
 
         verify(productRepository).findById(id);
         verify(productRepository, never()).save(any(Product.class));

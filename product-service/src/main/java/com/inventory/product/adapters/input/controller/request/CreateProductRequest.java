@@ -1,4 +1,4 @@
-package com.inventory.product.application.dto.request;
+package com.inventory.product.adapters.input.controller.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

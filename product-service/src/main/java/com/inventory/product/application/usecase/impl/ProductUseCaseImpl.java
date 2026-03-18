@@ -1,9 +1,9 @@
 package com.inventory.product.application.usecase.impl;
 
-import com.inventory.product.application.dto.request.CreateProductRequest;
-import com.inventory.product.application.dto.request.UpdateProductRequest;
-import com.inventory.product.application.dto.response.ProductResponse;
-import com.inventory.product.application.usecase.ProductApplicationService;
+import com.inventory.product.application.dto.command.CreateProductCommand;
+import com.inventory.product.application.dto.command.UpdateProductCommand;
+import com.inventory.product.application.dto.result.ProductResult;
+import com.inventory.product.application.usecase.ProductUseCase;
 import com.inventory.product.domain.enums.ProductStatus;
 import com.inventory.product.domain.exceptions.InvalidProductDataException;
 import com.inventory.product.domain.exceptions.ProductAlreadyExistsException;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class ProductUseCaseImpl implements ProductApplicationService {
+public class ProductUseCaseImpl implements ProductUseCase {
 
     private final ProductRepository productRepository;
 
@@ -30,7 +30,7 @@ public class ProductUseCaseImpl implements ProductApplicationService {
     }
 
     @Override
-    public ProductResponse create(CreateProductRequest request) {
+    public ProductResult create(CreateProductCommand request) {
         validateCreateRequest(request);
 
         if (productRepository.existsBySku(request.getSku())) {
@@ -55,7 +55,7 @@ public class ProductUseCaseImpl implements ProductApplicationService {
     }
 
     @Override
-    public ProductResponse findById(UUID id) {
+    public ProductResult findById(UUID id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Produto não encontrado."));
 
@@ -63,10 +63,10 @@ public class ProductUseCaseImpl implements ProductApplicationService {
     }
 
     @Override
-    public Page<ProductResponse> findAll(int page, int size) {
+    public Page<ProductResult> findAll(int page, int size) {
         Page<Product> productsPage = productRepository.findAll(PageRequest.of(page, size));
 
-        List<ProductResponse> content = productsPage.getContent()
+        List<ProductResult> content = productsPage.getContent()
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -75,7 +75,7 @@ public class ProductUseCaseImpl implements ProductApplicationService {
     }
 
     @Override
-    public ProductResponse findBySku(String sku) {
+    public ProductResult findBySku(String sku) {
         Product product = productRepository.findBySku(sku)
                 .orElseThrow(() -> new ProductNotFoundException("Produto não encontrado para o SKU informado."));
 
@@ -83,7 +83,7 @@ public class ProductUseCaseImpl implements ProductApplicationService {
     }
 
     @Override
-    public ProductResponse update(UUID id, UpdateProductRequest request) {
+    public ProductResult update(UUID id, UpdateProductCommand request) {
         validateUpdateRequest(request);
 
         Product product = productRepository.findById(id)
@@ -107,8 +107,8 @@ public class ProductUseCaseImpl implements ProductApplicationService {
         productRepository.deleteById(id);
     }
 
-    private ProductResponse toResponse(Product product) {
-        return new ProductResponse(
+    private ProductResult toResponse(Product product) {
+        return new ProductResult(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
@@ -120,7 +120,7 @@ public class ProductUseCaseImpl implements ProductApplicationService {
         );
     }
 
-    private void validateCreateRequest(CreateProductRequest request) {
+    private void validateCreateRequest(CreateProductCommand request) {
         if (request == null) {
             throw new InvalidProductDataException("Os dados do produto são obrigatórios.");
         }
@@ -138,7 +138,7 @@ public class ProductUseCaseImpl implements ProductApplicationService {
         }
     }
 
-    private void validateUpdateRequest(UpdateProductRequest request) {
+    private void validateUpdateRequest(UpdateProductCommand request) {
         if (request == null) {
             throw new InvalidProductDataException("Os dados do produto são obrigatórios.");
         }

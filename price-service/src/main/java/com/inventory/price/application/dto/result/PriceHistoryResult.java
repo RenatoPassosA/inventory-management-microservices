@@ -1,14 +1,17 @@
-package com.inventory.price.application.dto.response;
+package com.inventory.price.application.dto.result;
 
 import java.util.List;
 import java.util.UUID;
 
-public class PriceHistoryResponse {
+public class PriceHistoryResult {
 
     private UUID productId;
-    private List<PriceResponse> prices;
+    private List<PriceResult> prices;
 
-    public PriceHistoryResponse(UUID productId, List<PriceResponse> prices) {
+    public PriceHistoryResult() {
+    }
+
+    public PriceHistoryResult(UUID productId, List<PriceResult> prices) {
         this.productId = productId;
         this.prices = prices;
     }
@@ -17,7 +20,7 @@ public class PriceHistoryResponse {
         return productId;
     }
 
-    public List<PriceResponse> getPrices() {
+    public List<PriceResult> getPrices() {
         return prices;
     }
 
@@ -25,7 +28,7 @@ public class PriceHistoryResponse {
         this.productId = productId;
     }
 
-    public void setPrices(List<PriceResponse> prices) {
+    public void setPrices(List<PriceResult> prices) {
         this.prices = prices;
     }
 }

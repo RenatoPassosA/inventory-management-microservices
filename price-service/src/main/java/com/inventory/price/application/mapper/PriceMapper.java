@@ -1,16 +1,16 @@
 package com.inventory.price.application.mapper;
 
-import com.inventory.price.application.dto.response.PriceResponse;
+import com.inventory.price.application.dto.result.PriceResult;
 import com.inventory.price.domain.model.Price;
 
 import java.util.List;
 
 public class PriceMapper {
 
-    public static PriceResponse toResponse(Price price) {
+    public static PriceResult toResult(Price price) {
         if (price == null) return null;
 
-        return new PriceResponse(
+        return new PriceResult(
                 price.getId(),
                 price.getProductId(),
                 price.getPrice(),
@@ -21,9 +21,9 @@ public class PriceMapper {
         );
     }
 
-    public static List<PriceResponse> toResponseList(List<Price> prices) {
+    public static List<PriceResult> toResultList(List<Price> prices) {
         return prices.stream()
-                .map(PriceMapper::toResponse)
+                .map(PriceMapper::toResult)
                 .toList();
     }
 }

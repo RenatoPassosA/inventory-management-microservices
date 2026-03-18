@@ -1,4 +1,4 @@
-package com.inventory.price.application.dto.response;
+package com.inventory.price.adapters.input.controller.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

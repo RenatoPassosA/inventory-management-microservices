@@ -1,4 +1,4 @@
-package com.inventory.product.application.dto.response;
+package com.inventory.product.adapters.input.controller.response;
 
 import com.inventory.product.domain.enums.ProductStatus;
 

@@ -1,4 +1,4 @@
-package com.inventory.price.domain.exceptions;
+package com.inventory.price.adapters.input.controller.response;
 
 import java.time.LocalDateTime;
 

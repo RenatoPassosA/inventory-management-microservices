@@ -1,4 +1,4 @@
-package com.inventory.price.application.dto.request;
+package com.inventory.price.adapters.input.controller.request;
 
 import java.math.BigDecimal;
 import java.util.UUID;

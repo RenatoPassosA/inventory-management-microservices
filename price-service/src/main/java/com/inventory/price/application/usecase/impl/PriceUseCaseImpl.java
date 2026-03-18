@@ -1,10 +1,11 @@
 package com.inventory.price.application.usecase.impl;
 
+
 import com.inventory.price.application.client.ProductClient;
-import com.inventory.price.application.dto.request.CreatePriceRequest;
-import com.inventory.price.application.dto.request.UpdatePriceRequest;
-import com.inventory.price.application.dto.response.PriceHistoryResponse;
-import com.inventory.price.application.dto.response.PriceResponse;
+import com.inventory.price.application.dto.command.CreatePriceCommand;
+import com.inventory.price.application.dto.command.UpdatePriceCommand;
+import com.inventory.price.application.dto.result.PriceHistoryResult;
+import com.inventory.price.application.dto.result.PriceResult;
 import com.inventory.price.application.mapper.PriceMapper;
 import com.inventory.price.application.usecase.PriceUseCase;
 import com.inventory.price.domain.exceptions.ActivePriceAlreadyExistsException;
@@ -32,13 +33,13 @@ public class PriceUseCaseImpl implements PriceUseCase {
     }
 
     @Override
-    public PriceResponse createPrice(CreatePriceRequest request) {
-        validateProductExists(request.getProductId());
-        validatePriceValue(request.getPrice());
+    public PriceResult createPrice(CreatePriceCommand command) {
+        validateProductExists(command.getProductId());
+        validatePriceValue(command.getPrice());
 
-        if (priceRepository.existsActiveByProductId(request.getProductId())) {
+        if (priceRepository.existsActiveByProductId(command.getProductId())) {
             throw new ActivePriceAlreadyExistsException(
-                    "Active price already exists for product id: " + request.getProductId()
+                    "Active price already exists for product id: " + command.getProductId()
             );
         }
 
@@ -46,31 +47,31 @@ public class PriceUseCaseImpl implements PriceUseCase {
 
         Price price = new Price(
                 UUID.randomUUID(),
-                request.getProductId(),
-                request.getPrice(),
-                request.getCurrency(),
+                command.getProductId(),
+                command.getPrice(),
+                command.getCurrency(),
                 true,
                 now,
                 now
         );
 
         Price savedPrice = priceRepository.save(price);
-        return PriceMapper.toResponse(savedPrice);
+        return PriceMapper.toResult(savedPrice);
     }
 
     @Override
-    public PriceResponse getCurrentPriceByProductId(UUID productId) {
+    public PriceResult getCurrentPriceByProductId(UUID productId) {
         Price currentPrice = priceRepository.findActiveByProductId(productId)
                 .orElseThrow(() -> new PriceNotFoundException(
                         "Active price not found for product id: " + productId
                 ));
 
-        return PriceMapper.toResponse(currentPrice);
+        return PriceMapper.toResult(currentPrice);
     }
 
     @Override
-    public PriceResponse updatePrice(UUID id, UpdatePriceRequest request) {
-        validatePriceValue(request.getPrice());
+    public PriceResult updatePrice(UUID id, UpdatePriceCommand command) {
+        validatePriceValue(command.getPrice());
 
         Price existingPrice = priceRepository.findById(id)
                 .orElseThrow(() -> new PriceNotFoundException(
@@ -86,26 +87,26 @@ public class PriceUseCaseImpl implements PriceUseCase {
         Price newPrice = new Price(
                 UUID.randomUUID(),
                 existingPrice.getProductId(),
-                request.getPrice(),
-                request.getCurrency(),
+                command.getPrice(),
+                command.getCurrency(),
                 true,
                 now,
                 now
         );
 
         Price savedPrice = priceRepository.save(newPrice);
-        return PriceMapper.toResponse(savedPrice);
+        return PriceMapper.toResult(savedPrice);
     }
 
     @Override
-    public PriceHistoryResponse getPriceHistoryByProductId(UUID productId) {
+    public PriceHistoryResult getPriceHistoryByProductId(UUID productId) {
         validateProductExists(productId);
 
         List<Price> priceHistory = priceRepository.findAllByProductId(productId);
 
-        return new PriceHistoryResponse(
+        return new PriceHistoryResult(
                 productId,
-                PriceMapper.toResponseList(priceHistory)
+                PriceMapper.toResultList(priceHistory)
         );
     }
 

@@ -1,7 +1,7 @@
 package com.inventory.price.adapters.input.handler;
 
+import com.inventory.price.adapters.input.controller.response.ErrorResponse;
 import com.inventory.price.domain.exceptions.ActivePriceAlreadyExistsException;
-import com.inventory.price.domain.exceptions.ErrorResponse;
 import com.inventory.price.domain.exceptions.InvalidPriceException;
 import com.inventory.price.domain.exceptions.PriceNotFoundException;
 import com.inventory.price.domain.exceptions.ProductNotFoundException;

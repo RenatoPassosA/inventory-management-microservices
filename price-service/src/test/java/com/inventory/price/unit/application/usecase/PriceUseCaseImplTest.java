@@ -1,11 +1,11 @@
 package com.inventory.price.unit.application.usecase;
 
 import com.inventory.price.application.client.ProductClient;
-import com.inventory.price.application.dto.request.CreatePriceRequest;
-import com.inventory.price.application.dto.request.UpdatePriceRequest;
-import com.inventory.price.application.dto.response.PriceHistoryResponse;
-import com.inventory.price.application.dto.response.PriceResponse;
+import com.inventory.price.application.dto.command.CreatePriceCommand;
+import com.inventory.price.application.dto.command.UpdatePriceCommand;
 import com.inventory.price.application.usecase.impl.PriceUseCaseImpl;
+import com.inventory.price.application.dto.result.PriceHistoryResult;
+import com.inventory.price.application.dto.result.PriceResult;
 import com.inventory.price.domain.exceptions.ActivePriceAlreadyExistsException;
 import com.inventory.price.domain.exceptions.InvalidPriceException;
 import com.inventory.price.domain.exceptions.PriceNotFoundException;
@@ -43,7 +43,7 @@ class PriceUseCaseImplTest {
     void shouldCreatePriceSuccessfully() {
         UUID productId = UUID.randomUUID();
 
-        CreatePriceRequest request = new CreatePriceRequest(
+        CreatePriceCommand command = new CreatePriceCommand(
                 productId,
                 new BigDecimal("199.90"),
                 "BRL"
@@ -52,8 +52,8 @@ class PriceUseCaseImplTest {
         Price savedPrice = new Price(
                 UUID.randomUUID(),
                 productId,
-                request.getPrice(),
-                request.getCurrency(),
+                command.getPrice(),
+                command.getCurrency(),
                 true,
                 LocalDateTime.now(),
                 LocalDateTime.now()
@@ -63,13 +63,13 @@ class PriceUseCaseImplTest {
         when(priceRepository.existsActiveByProductId(productId)).thenReturn(false);
         when(priceRepository.save(any(Price.class))).thenReturn(savedPrice);
 
-        PriceResponse response = priceUseCase.createPrice(request);
+        PriceResult result = priceUseCase.createPrice(command);
 
-        assertNotNull(response);
-        assertEquals(productId, response.getProductId());
-        assertEquals(new BigDecimal("199.90"), response.getPrice());
-        assertEquals("BRL", response.getCurrency());
-        assertTrue(response.isActive());
+        assertNotNull(result);
+        assertEquals(productId, result.getProductId());
+        assertEquals(new BigDecimal("199.90"), result.getPrice());
+        assertEquals("BRL", result.getCurrency());
+        assertTrue(result.isActive());
 
         verify(productClient).existsById(productId);
         verify(priceRepository).existsActiveByProductId(productId);
@@ -80,7 +80,7 @@ class PriceUseCaseImplTest {
     void shouldThrowWhenProductNotFoundOnCreatePrice() {
         UUID productId = UUID.randomUUID();
 
-        CreatePriceRequest request = new CreatePriceRequest(
+        CreatePriceCommand command = new CreatePriceCommand(
                 productId,
                 new BigDecimal("199.90"),
                 "BRL"
@@ -88,7 +88,7 @@ class PriceUseCaseImplTest {
 
         when(productClient.existsById(productId)).thenReturn(false);
 
-        assertThrows(ProductNotFoundException.class, () -> priceUseCase.createPrice(request));
+        assertThrows(ProductNotFoundException.class, () -> priceUseCase.createPrice(command));
 
         verify(productClient).existsById(productId);
         verify(priceRepository, never()).existsActiveByProductId(any(UUID.class));
@@ -99,7 +99,7 @@ class PriceUseCaseImplTest {
     void shouldThrowWhenActivePriceAlreadyExists() {
         UUID productId = UUID.randomUUID();
 
-        CreatePriceRequest request = new CreatePriceRequest(
+        CreatePriceCommand command = new CreatePriceCommand(
                 productId,
                 new BigDecimal("199.90"),
                 "BRL"
@@ -108,7 +108,7 @@ class PriceUseCaseImplTest {
         when(productClient.existsById(productId)).thenReturn(true);
         when(priceRepository.existsActiveByProductId(productId)).thenReturn(true);
 
-        assertThrows(ActivePriceAlreadyExistsException.class, () -> priceUseCase.createPrice(request));
+        assertThrows(ActivePriceAlreadyExistsException.class, () -> priceUseCase.createPrice(command));
 
         verify(productClient).existsById(productId);
         verify(priceRepository).existsActiveByProductId(productId);
@@ -119,7 +119,7 @@ class PriceUseCaseImplTest {
     void shouldThrowWhenPriceIsInvalidOnCreate() {
         UUID productId = UUID.randomUUID();
 
-        CreatePriceRequest request = new CreatePriceRequest(
+        CreatePriceCommand command = new CreatePriceCommand(
                 productId,
                 BigDecimal.ZERO,
                 "BRL"
@@ -127,7 +127,7 @@ class PriceUseCaseImplTest {
 
         when(productClient.existsById(productId)).thenReturn(true);
 
-        assertThrows(InvalidPriceException.class, () -> priceUseCase.createPrice(request));
+        assertThrows(InvalidPriceException.class, () -> priceUseCase.createPrice(command));
 
         verify(productClient).existsById(productId);
         verify(priceRepository, never()).existsActiveByProductId(any(UUID.class));
@@ -150,12 +150,12 @@ class PriceUseCaseImplTest {
 
         when(priceRepository.findActiveByProductId(productId)).thenReturn(Optional.of(price));
 
-        PriceResponse response = priceUseCase.getCurrentPriceByProductId(productId);
+        PriceResult result = priceUseCase.getCurrentPriceByProductId(productId);
 
-        assertNotNull(response);
-        assertEquals(productId, response.getProductId());
-        assertEquals(new BigDecimal("99.90"), response.getPrice());
-        assertEquals("BRL", response.getCurrency());
+        assertNotNull(result);
+        assertEquals(productId, result.getProductId());
+        assertEquals(new BigDecimal("99.90"), result.getPrice());
+        assertEquals("BRL", result.getCurrency());
     }
 
     @Test
@@ -184,7 +184,7 @@ class PriceUseCaseImplTest {
                 LocalDateTime.now()
         );
 
-        UpdatePriceRequest request = new UpdatePriceRequest(
+        UpdatePriceCommand command = new UpdatePriceCommand(
                 new BigDecimal("129.90"),
                 "BRL"
         );
@@ -193,13 +193,13 @@ class PriceUseCaseImplTest {
         when(productClient.existsById(productId)).thenReturn(true);
         when(priceRepository.save(any(Price.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PriceResponse response = priceUseCase.updatePrice(priceId, request);
+        PriceResult result = priceUseCase.updatePrice(priceId, command);
 
-        assertNotNull(response);
-        assertEquals(productId, response.getProductId());
-        assertEquals(new BigDecimal("129.90"), response.getPrice());
-        assertEquals("BRL", response.getCurrency());
-        assertTrue(response.isActive());
+        assertNotNull(result);
+        assertEquals(productId, result.getProductId());
+        assertEquals(new BigDecimal("129.90"), result.getPrice());
+        assertEquals("BRL", result.getCurrency());
+        assertTrue(result.isActive());
 
         verify(priceRepository).findById(priceId);
         verify(productClient).existsById(productId);
@@ -211,14 +211,14 @@ class PriceUseCaseImplTest {
     void shouldThrowWhenPriceNotFoundOnUpdate() {
         UUID priceId = UUID.randomUUID();
 
-        UpdatePriceRequest request = new UpdatePriceRequest(
+        UpdatePriceCommand command = new UpdatePriceCommand(
                 new BigDecimal("129.90"),
                 "BRL"
         );
 
         when(priceRepository.findById(priceId)).thenReturn(Optional.empty());
 
-        assertThrows(PriceNotFoundException.class, () -> priceUseCase.updatePrice(priceId, request));
+        assertThrows(PriceNotFoundException.class, () -> priceUseCase.updatePrice(priceId, command));
 
         verify(priceRepository).findById(priceId);
         verify(productClient, never()).existsById(any(UUID.class));
@@ -230,12 +230,12 @@ class PriceUseCaseImplTest {
     void shouldThrowWhenPriceIsInvalidOnUpdate() {
         UUID priceId = UUID.randomUUID();
 
-        UpdatePriceRequest request = new UpdatePriceRequest(
+        UpdatePriceCommand command = new UpdatePriceCommand(
                 new BigDecimal("-10.00"),
                 "BRL"
         );
 
-        assertThrows(InvalidPriceException.class, () -> priceUseCase.updatePrice(priceId, request));
+        assertThrows(InvalidPriceException.class, () -> priceUseCase.updatePrice(priceId, command));
 
         verify(priceRepository, never()).findById(any(UUID.class));
         verify(priceRepository, never()).deactivateCurrentPrice(any(UUID.class));
@@ -257,7 +257,7 @@ class PriceUseCaseImplTest {
                 LocalDateTime.now()
         );
 
-        UpdatePriceRequest request = new UpdatePriceRequest(
+        UpdatePriceCommand command = new UpdatePriceCommand(
                 new BigDecimal("129.90"),
                 "BRL"
         );
@@ -265,7 +265,7 @@ class PriceUseCaseImplTest {
         when(priceRepository.findById(priceId)).thenReturn(Optional.of(existingPrice));
         when(productClient.existsById(productId)).thenReturn(false);
 
-        assertThrows(ProductNotFoundException.class, () -> priceUseCase.updatePrice(priceId, request));
+        assertThrows(ProductNotFoundException.class, () -> priceUseCase.updatePrice(priceId, command));
 
         verify(priceRepository).findById(priceId);
         verify(productClient).existsById(productId);
@@ -300,11 +300,11 @@ class PriceUseCaseImplTest {
         when(productClient.existsById(productId)).thenReturn(true);
         when(priceRepository.findAllByProductId(productId)).thenReturn(List.of(oldPrice, currentPrice));
 
-        PriceHistoryResponse response = priceUseCase.getPriceHistoryByProductId(productId);
+        PriceHistoryResult result = priceUseCase.getPriceHistoryByProductId(productId);
 
-        assertNotNull(response);
-        assertEquals(productId, response.getProductId());
-        assertEquals(2, response.getPrices().size());
+        assertNotNull(result);
+        assertEquals(productId, result.getProductId());
+        assertEquals(2, result.getPrices().size());
 
         verify(productClient).existsById(productId);
         verify(priceRepository).findAllByProductId(productId);
