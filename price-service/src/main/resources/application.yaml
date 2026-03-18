@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: price-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/pricedb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+services:
+  product-service:
+    url: http://localhost:8081

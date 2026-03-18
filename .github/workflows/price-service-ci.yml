@@ -1,0 +1,35 @@
+name: Price Service CI
+
+on:
+  push:
+    paths:
+      - "price-service/**"
+      - ".github/workflows/price-service-ci.yml"
+  pull_request:
+    paths:
+      - "price-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: price-service
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Make Maven Wrapper executable
+        run: chmod +x mvnw
+
+      - name: Run tests
+        run: ./mvnw clean test
