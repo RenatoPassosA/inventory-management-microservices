@@ -10,9 +10,12 @@ import com.inventory.order.application.dto.command.CreateOrderItemCommand;
 import com.inventory.order.application.dto.result.CreateOrderResult;
 import com.inventory.order.application.dto.result.OrderItemResult;
 import com.inventory.order.application.dto.result.OrderResult;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+
+@Component
 public class OrderControllerMapper {
 
     public CreateOrderCommand toCreateOrderCommand(CreateOrderRequest request) {

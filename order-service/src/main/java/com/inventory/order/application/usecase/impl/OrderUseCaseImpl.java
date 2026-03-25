@@ -13,11 +13,14 @@ import com.inventory.order.domain.exceptions.OrderNotFoundException;
 import com.inventory.order.domain.model.Order;
 import com.inventory.order.domain.model.OrderItem;
 import com.inventory.order.domain.repository.OrderRepository;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+
+@Service
 public class OrderUseCaseImpl implements OrderUseCase {
 
     private final OrderRepository orderRepository;

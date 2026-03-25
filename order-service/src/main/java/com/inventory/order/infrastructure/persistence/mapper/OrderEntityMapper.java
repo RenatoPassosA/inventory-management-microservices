@@ -4,10 +4,13 @@ import com.inventory.order.domain.model.Order;
 import com.inventory.order.domain.model.OrderItem;
 import com.inventory.order.infrastructure.persistence.entity.OrderEntity;
 import com.inventory.order.infrastructure.persistence.entity.OrderItemEntity;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
+@Component
 public class OrderEntityMapper {
 
     public OrderEntity toEntity(Order order) {

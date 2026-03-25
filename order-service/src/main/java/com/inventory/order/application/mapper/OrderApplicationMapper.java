@@ -5,9 +5,11 @@ import com.inventory.order.application.dto.result.OrderItemResult;
 import com.inventory.order.application.dto.result.OrderResult;
 import com.inventory.order.domain.model.Order;
 import com.inventory.order.domain.model.OrderItem;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public class OrderApplicationMapper {
 
     public CreateOrderResult toCreateOrderResult(Order order) {

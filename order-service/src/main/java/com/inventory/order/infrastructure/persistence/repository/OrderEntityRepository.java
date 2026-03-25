@@ -4,11 +4,14 @@ import com.inventory.order.domain.model.Order;
 import com.inventory.order.domain.repository.OrderRepository;
 import com.inventory.order.infrastructure.persistence.entity.OrderEntity;
 import com.inventory.order.infrastructure.persistence.mapper.OrderEntityMapper;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
+@Repository
 public class OrderEntityRepository implements OrderRepository {
 
     private final OrderRepositoryJpa orderRepositoryJpa;
