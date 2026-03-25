@@ -5,8 +5,8 @@ import com.inventory.order.application.client.PriceClient;
 import com.inventory.order.application.dto.command.CreateOrderCommand;
 import com.inventory.order.application.dto.command.CreateOrderItemCommand;
 import com.inventory.order.application.dto.result.CreateOrderResult;
-import com.inventory.order.application.dto.result.OrderItemResult;
 import com.inventory.order.application.dto.result.OrderResult;
+import com.inventory.order.application.mapper.OrderApplicationMapper;
 import com.inventory.order.application.usecase.OrderUseCase;
 import com.inventory.order.domain.exceptions.InvalidOrderException;
 import com.inventory.order.domain.exceptions.OrderNotFoundException;
@@ -23,13 +23,16 @@ public class OrderUseCaseImpl implements OrderUseCase {
     private final OrderRepository orderRepository;
     private final PriceClient priceClient;
     private final InventoryClient inventoryClient;
+    private final OrderApplicationMapper orderApplicationMapper;
 
     public OrderUseCaseImpl(OrderRepository orderRepository,
                             PriceClient priceClient,
-                            InventoryClient inventoryClient) {
+                            InventoryClient inventoryClient,
+                            OrderApplicationMapper orderApplicationMapper) {
         this.orderRepository = orderRepository;
         this.priceClient = priceClient;
         this.inventoryClient = inventoryClient;
+        this.orderApplicationMapper = orderApplicationMapper;
     }
 
     @Override
@@ -47,7 +50,7 @@ public class OrderUseCaseImpl implements OrderUseCase {
 
         Order savedOrder = orderRepository.save(order);
 
-        return toCreateOrderResult(savedOrder);
+        return orderApplicationMapper.toCreateOrderResult(savedOrder);
     }
 
     @Override
@@ -55,13 +58,13 @@ public class OrderUseCaseImpl implements OrderUseCase {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
 
-        return toOrderResult(order);
+        return orderApplicationMapper.toOrderResult(order);
     }
 
     @Override
     public List<OrderResult> findAll() {
         return orderRepository.findAll().stream()
-                .map(this::toOrderResult)
+                .map(orderApplicationMapper::toOrderResult)
                 .toList();
     }
 
@@ -101,43 +104,5 @@ public class OrderUseCaseImpl implements OrderUseCase {
         for (OrderItem item : items) {
             inventoryClient.reserveStock(item.getProductId(), item.getQuantity());
         }
-    }
-
-    private CreateOrderResult toCreateOrderResult(Order order) {
-        return new CreateOrderResult(
-                order.getId(),
-                toOrderItemResultList(order.getItems()),
-                order.getTotalAmount(),
-                order.getStatus(),
-                order.getCreatedAt(),
-                order.getUpdatedAt()
-        );
-    }
-
-    private OrderResult toOrderResult(Order order) {
-        return new OrderResult(
-                order.getId(),
-                toOrderItemResultList(order.getItems()),
-                order.getTotalAmount(),
-                order.getStatus(),
-                order.getCreatedAt(),
-                order.getUpdatedAt()
-        );
-    }
-
-    private List<OrderItemResult> toOrderItemResultList(List<OrderItem> items) {
-        return items.stream()
-                .map(this::toOrderItemResult)
-                .toList();
-    }
-
-    private OrderItemResult toOrderItemResult(OrderItem item) {
-        return new OrderItemResult(
-                item.getId(),
-                item.getProductId(),
-                item.getQuantity(),
-                item.getUnitPrice(),
-                item.getSubtotal()
-        );
     }
 }

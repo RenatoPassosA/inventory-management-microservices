@@ -9,12 +9,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.UUID;
 
 @Component
-public class ProductServiceClient implements ProductClient {
+public class ProductClientImpl implements ProductClient {
 
     private final WebClient webClient;
     private final String productServiceBaseUrl;
 
-    public ProductServiceClient(WebClient webClient, @Value("${services.product-service.url}") String productServiceBaseUrl) {
+    public ProductClientImpl(WebClient webClient, @Value("${services.product-service.url}") String productServiceBaseUrl) {
         this.webClient = webClient;
         this.productServiceBaseUrl = productServiceBaseUrl;
     }

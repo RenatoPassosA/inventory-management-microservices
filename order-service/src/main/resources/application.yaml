@@ -1,3 +1,8 @@
 spring:
   application:
     name: order
+services:
+  price-service:
+    url: http://localhost:8082
+  inventory-service:
+    url: http://localhost:8083
