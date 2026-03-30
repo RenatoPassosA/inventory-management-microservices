@@ -24,23 +24,18 @@ public class InventoryClientImpl implements InventoryClient {
 
     @Override
     public void reserveStock(UUID productId, Integer quantity) {
-        ReserveStockRequest request = new ReserveStockRequest(productId, quantity);
-
-        webClient.post()
-                .uri(inventoryServiceBaseUrl + "/inventory/reserve")
-                .bodyValue(request)
+        webClient.patch()
+                .uri(inventoryServiceBaseUrl + "/inventories/product/{productId}/reserve-stock", productId)
+                .bodyValue(java.util.Map.of("quantity", quantity))
                 .retrieve()
                 .onStatus(
-                        HttpStatusCode::is4xxClientError,
-                        clientResponse -> {
-                            throw new InvalidOrderException("Unable to reserve stock for product: " + productId);
-                        }
-                )
-                .onStatus(
-                        HttpStatusCode::is5xxServerError,
-                        clientResponse -> {
-                            throw new RuntimeException("Error communicating with inventory-service");
-                        }
+                        HttpStatusCode::isError,
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .map(body -> new InvalidOrderException(
+                                        "Inventory-service returned error. Status="
+                                                + clientResponse.statusCode().value()
+                                                + ", body=" + body
+                                ))
                 )
                 .toBodilessEntity()
                 .block();

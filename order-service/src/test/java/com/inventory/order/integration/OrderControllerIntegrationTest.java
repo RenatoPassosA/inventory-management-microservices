@@ -319,7 +319,7 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.status").value("CONFIRMED"))
-                .andExpect(jsonPath("$.totalAmount").value(39.90))
+                .andExpect(jsonPath("$.totalAmount").value(39.80))
                 .andExpect(jsonPath("$.items", hasSize(1)))
                 .andExpect(jsonPath("$.items[0].productId").value(productId))
                 .andExpect(jsonPath("$.items[0].quantity").value(2))

@@ -26,7 +26,7 @@ public class PriceClientImpl implements PriceClient {
     @Override
     public BigDecimal getActivePriceByProductId(UUID productId) {
         PriceResponse response = webClient.get()
-                .uri(priceServiceBaseUrl + "/prices/active/{productId}", productId)
+                .uri(priceServiceBaseUrl + "/prices/product/{productId}", productId)
                 .retrieve()
                 .onStatus(
                         HttpStatusCode::is4xxClientError,
