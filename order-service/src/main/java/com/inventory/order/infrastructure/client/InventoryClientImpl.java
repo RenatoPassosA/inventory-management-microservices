@@ -2,7 +2,6 @@ package com.inventory.order.infrastructure.client;
 
 import com.inventory.order.application.client.InventoryClient;
 import com.inventory.order.domain.exceptions.InvalidOrderException;
-import com.inventory.order.infrastructure.client.request.ReserveStockRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;

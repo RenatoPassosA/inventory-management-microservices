@@ -1,0 +1,27 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: api-gateway
+
+services:
+  product-service:
+    url: http://localhost:8081
+  price-service:
+    url: http://localhost:8080
+  inventory-service:
+    url: http://localhost:8083
+  order-service:
+    url: http://localhost:8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    reactor.netty.http.client: INFO
