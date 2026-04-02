@@ -2,98 +2,205 @@
 
 Responsável pelo gerenciamento do catálogo de produtos.
 
-## 1. Criar Produto
-`POST /products`
+A camada HTTP é desacoplada da aplicação através de DTOs (`request/response`) e mapeamento para `command/result`.
+
+---
+
+# 1. Criar Produto
+
+POST /products
 
 Cria um novo produto no catálogo.
 
-**Request Body:**
+## Request Body
+
 ```json
 {
   "name": "Notebook Dell XPS 15",
   "description": "Notebook para desenvolvedores",
   "sku": "DELL-XPS-15",
-  "categoryId": "123e4567-e89b-12d3-a456-426614174000"
+  "category": "INFORMATICA"
 }
-Responses:
+```
 
-201 Created: Produto criado com sucesso. Retorna o objeto criado (com ID e status ACTIVE).
+## Responses
 
-400 Bad Request: Dados inválidos (ex: SKU duplicado, campos obrigatórios faltando).
+### 201 Created
 
-401 Unauthorized: Token não fornecido ou inválido.
-
-2. Buscar Produto por ID
-GET /products/{id}
-
-Responses:
-
-200 OK:
-
-JSON
+```json
 {
-  "id": "123e4567-e89b-12d3-a456-426614174001",
+  "id": "uuid",
   "name": "Notebook Dell XPS 15",
   "description": "Notebook para desenvolvedores",
   "sku": "DELL-XPS-15",
-  "categoryId": "123e4567-e89b-12d3-a456-426614174000",
-  "status": "ACTIVE"
+  "category": "INFORMATICA",
+  "status": "ACTIVE",
+  "createdAt": "2026-03-11T12:41:29",
+  "updatedAt": "2026-03-11T12:41:29"
 }
-404 Not Found: Produto não existe.
+```
 
-3. Listar Produtos
-GET /products?page=0&size=10&status=ACTIVE
+### 400 Bad Request
 
-Responses:
+- campos inválidos
+- SKU duplicado
 
-200 OK: Retorna uma lista paginada de produtos.
+---
 
-4. Atualizar Produto
+# 2. Buscar Produto por ID
+
+GET /products/{id}
+
+## Responses
+
+### 200 OK
+
+```json
+{
+  "id": "uuid",
+  "name": "Notebook Dell XPS 15",
+  "description": "Notebook para desenvolvedores",
+  "sku": "DELL-XPS-15",
+  "category": "INFORMATICA",
+  "status": "ACTIVE",
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+
+### 404 Not Found
+
+- produto não encontrado
+
+---
+
+# 3. Buscar Produto por SKU
+
+GET /products/sku/{sku}
+
+## Responses
+
+### 200 OK
+
+Retorna o produto correspondente ao SKU.
+
+### 404 Not Found
+
+- produto não encontrado
+
+---
+
+# 4. Listar Produtos (Paginação)
+
+GET /products?page=0&size=10
+
+## Responses
+
+### 200 OK
+
+```json
+{
+  "content": [
+    {
+      "id": "uuid",
+      "name": "Produto",
+      "sku": "SKU-001",
+      "category": "CAT",
+      "status": "ACTIVE"
+    }
+  ],
+  "page": 0,
+  "size": 10,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+---
+
+# 5. Atualizar Produto
+
 PUT /products/{id}
 
 Atualiza os dados de um produto existente.
 
-Request Body:
+## Request Body
 
-JSON
+```json
 {
-  "name": "Notebook Dell XPS 15 - Atualizado",
+  "name": "Notebook Atualizado",
   "description": "Nova descrição",
-  "categoryId": "123e4567-e89b-12d3-a456-426614174000"
+  "category": "ELETRONICOS"
 }
-Responses:
+```
 
-200 OK: Produto atualizado.
+## Responses
 
-400 Bad Request: Dados inválidos.
+### 200 OK
 
-404 Not Found: Produto não encontrado.
+Produto atualizado com sucesso.
 
-5. Alterar Status do Produto
-PATCH /products/{id}/status
+### 400 Bad Request
 
-Request Body:
+- dados inválidos
 
-JSON
+### 404 Not Found
+
+- produto não encontrado
+
+---
+
+# 6. Deletar Produto
+
+DELETE /products/{id}
+
+## Responses
+
+### 204 No Content
+
+Produto removido com sucesso.
+
+### 404 Not Found
+
+- produto não encontrado
+
+---
+
+# Validation
+
+Validações aplicadas:
+
+- name: obrigatório
+- sku: obrigatório e único
+- category: obrigatório
+
+---
+
+# Error Handling
+
+Os erros são tratados globalmente via `GlobalExceptionHandler`.
+
+Formato padrão:
+
+```json
 {
-  "status": "INACTIVE"
+  "status": 400,
+  "message": "Erro de validação",
+  "errors": [
+    {
+      "field": "name",
+      "message": "must not be blank"
+    }
+  ]
 }
-Responses:
+```
 
-204 No Content: Status alterado com sucesso.
+---
 
-404 Not Found: Produto não encontrado.
+# Architecture Notes
 
-6. Verificar Existência do Produto
-GET /products/{id}/exists
-
-Utilizado por outros microsserviços (ex: Order Service) para validação rápida.
-
-Responses:
-
-200 OK:
-
-JSON
-{
-  "exists": true
-}
+- Controller utiliza DTOs (`request/response`)
+- Application utiliza `command/result`
+- Conversão feita via `ProductWebMapper`
+- Persistência isolada via `ProductRepository`
+- Testes de integração utilizam Testcontainers

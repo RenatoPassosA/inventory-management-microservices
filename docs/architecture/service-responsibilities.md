@@ -1,8 +1,8 @@
 # Service Responsibilities
 
-Este documento define claramente as responsabilidades de cada microsserviço do sistema.
+Este documento define as responsabilidades de cada componente principal do sistema.
 
-Separar responsabilidades é essencial para manter **baixo acoplamento e alta coesão**.
+A separação de responsabilidades é essencial para manter **baixo acoplamento**, **alta coesão** e uma arquitetura distribuída mais fácil de evoluir.
 
 ---
 
@@ -10,29 +10,15 @@ Separar responsabilidades é essencial para manter **baixo acoplamento e alta co
 
 Responsável por:
 
-- entrada única do sistema
-- roteamento de requisições
-- validação de autenticação
-- proteção das APIs internas
+- atuar como ponto único de entrada do sistema
+- receber requisições de clientes externos
+- rotear chamadas para o microsserviço correto
+- centralizar o acesso externo às APIs
+- servir como base para futuras políticas transversais
 
-O gateway não contém regras de negócio.
+O gateway **não contém regras de negócio**, **não persiste dados** e **não substitui a comunicação interna entre microsserviços**.
 
----
-
-# Auth Service
-
-Responsável por:
-
-- autenticação de usuários
-- geração de tokens JWT
-- gerenciamento de usuários
-- controle de permissões
-
-Principais funcionalidades:
-
-- registro de usuário
-- login
-- validação de token
+> Nesta versão atual do projeto, o gateway ainda não aplica autenticação.
 
 ---
 
@@ -42,10 +28,12 @@ Responsável por:
 
 - cadastro de produtos
 - atualização de produtos
-- consulta de produtos
+- consulta de produtos por id
 - listagem de produtos
 
 Este serviço mantém o **catálogo de produtos do sistema**.
+
+Seu domínio é voltado à existência, identificação e manutenção dos produtos disponíveis para os demais fluxos da aplicação.
 
 ---
 
@@ -53,16 +41,18 @@ Este serviço mantém o **catálogo de produtos do sistema**.
 
 Responsável por:
 
-- definição de preços
-- histórico de preços
-- preços promocionais
-- consulta de preço atual
+- cadastro de preços
+- atualização de preços
+- consulta de preço por produto
+- manutenção do histórico de preços
 
 Separar preços do produto permite:
 
-- flexibilidade de pricing
+- flexibilidade na evolução da política de preços
 - histórico de alterações
-- promoções independentes
+- desacoplamento entre catálogo e precificação
+
+O `price-service` é consultado pelo `order-service` para compor o valor do pedido.
 
 ---
 
@@ -70,13 +60,21 @@ Separar preços do produto permite:
 
 Responsável por:
 
-- controle de estoque
-- entradas de estoque
-- saídas de estoque
-- reservas de estoque
-- histórico de movimentações
+- criação do registro de estoque de um produto
+- consulta de estoque
+- adição de estoque
+- remoção de estoque
+- reserva de estoque
+- liberação de estoque reservado
 
-Este serviço garante consistência de disponibilidade de produtos.
+Este serviço garante o controle de disponibilidade dos produtos no sistema.
+
+No fluxo atual do projeto, ele expõe operações por produto, como:
+
+- adicionar estoque
+- remover estoque
+- reservar estoque
+- liberar estoque reservado
 
 ---
 
@@ -85,10 +83,15 @@ Este serviço garante consistência de disponibilidade de produtos.
 Responsável por:
 
 - criação de pedidos
-- orquestração do fluxo de compra
-- validação de produtos
-- consulta de preços
-- reserva de estoque
-- cancelamento de pedidos
+- orquestração do fluxo principal de compra
+- composição dos itens do pedido
+- consulta de preços por produto
+- solicitação de reserva de estoque
+- persistência do pedido
 
-O Order Service atua como **orquestrador do fluxo de negócio distribuído**.
+O `order-service` atua como **orquestrador do fluxo de negócio distribuído**.
+
+Na implementação atual, ele coordena principalmente a integração com:
+
+- `price-service`, para obter o preço dos produtos
+- `inventory-service`, para reservar estoque antes da confirmação do pedido

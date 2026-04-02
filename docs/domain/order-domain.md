@@ -2,7 +2,9 @@
 
 O Order Service é responsável pela criação e gerenciamento de pedidos.
 
-Ele atua como **orquestrador do fluxo de negócio**.
+Ele atua como **orquestrador do fluxo de negócio**, integrando com:
+- price-service (para obter preço)
+- inventory-service (para reservar estoque)
 
 ---
 
@@ -12,10 +14,12 @@ Ele atua como **orquestrador do fluxo de negócio**.
 
 #### Fields
 
-- id
-- status
-- totalAmount
-- createdAt
+- id (UUID)
+- status (OrderStatus)
+- totalAmount (BigDecimal)
+- createdAt (OffsetDateTime)
+- updatedAt (OffsetDateTime)
+- items (List<OrderItem>)
 
 ---
 
@@ -23,53 +27,69 @@ Ele atua como **orquestrador do fluxo de negócio**.
 
 #### Fields
 
-- id
-- orderId
-- productId
-- quantity
-- unitPrice
-- totalPrice
+- id (UUID)
+- productId (UUID)
+- quantity (Integer)
+- unitPrice (BigDecimal)
+- subtotal (BigDecimal)
 
 ---
 
 ## Responsibilities
 
 - criar pedido
-- validar produtos
-- consultar preços
+- validar itens
+- consultar preço do produto
 - reservar estoque
+- calcular total
 - persistir pedido
-- cancelar pedido
-- confirmar pedido
+- buscar pedido por id
+- listar pedidos
 
 ---
 
 ## Order Status
 
-Possíveis estados:
+Estados atualmente utilizados:
 
-- CREATED
-- RESERVED
 - CONFIRMED
-- CANCELLED
-- FAILED
+
+> Observação: o fluxo atual não implementa estados intermediários (RESERVED, CREATED, etc).
+O pedido já é criado como **CONFIRMED** após sucesso das integrações.
 
 ---
 
 ## Domain Rules
 
 - um pedido deve possuir ao menos um item
-- quantidade de item deve ser maior que zero
-- produto deve existir
-- produto deve estar ativo
-- item deve ter preço válido
-- pedido só pode ser confirmado se estiver reservado
-- pedido cancelado não pode ser confirmado
+- quantidade deve ser maior que zero
+- productId não pode ser nulo
+- preço deve existir no price-service
+- estoque deve estar disponível no inventory-service
+- totalAmount = soma dos subtotais dos itens
+- subtotal = unitPrice * quantity
 
 ---
 
-## Notes
+## Integrações
 
-O Order Service não deve manipular diretamente banco de dados de outros serviços.
+### Price Service
+- busca preço ativo do produto
+- erro se não existir preço
 
-Toda integração deve ocorrer via APIs REST.
+### Inventory Service
+- reserva estoque
+- erro se não houver estoque suficiente
+
+---
+
+## Errors (Domínio)
+
+- InvalidOrderException
+- InvalidOrderItemException
+
+Erros externos (via integração):
+- falha ao obter preço → erro de pedido inválido
+- falha ao reservar estoque → erro de pedido inválido
+
+---

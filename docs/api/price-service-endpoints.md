@@ -1,45 +1,196 @@
-### 📄 `docs/api/price-service-endpoints.md`
-
-```markdown
 # Price Service API
 
-Responsável pela precificação dos produtos e histórico de valores.
+Responsável pela gestão de preços dos produtos, incluindo histórico e versionamento.
 
-## 1. Definir Novo Preço
-`POST /prices`
+---
 
-Define um novo preço para um produto (o preço anterior passa a ser inativo e compõe o histórico).
+## 📌 Observações Arquiteturais
 
-**Request Body:**
-```json
+- O controller utiliza:
+  - Request/Response (camada HTTP)
+- O use case utiliza:
+  - Command/Result (camada application)
+- A conversão é feita via:
+  - PriceWebMapper
+
+---
+
+## 1. Criar preço
+
+POST /prices
+
+Cria um novo preço para um produto.
+
+### Regras:
+- O produto deve existir (validação via Product Service)
+- Não pode existir outro preço ativo para o produto
+
+---
+
+### Request Body
+
 {
-  "productId": "123e4567-e89b-12d3-a456-426614174001",
-  "amount": 12500.00,
-  "currency": "BRL",
-  "validFrom": "2023-10-01T00:00:00Z"
-}
-Responses:
-
-201 Created: Preço cadastrado com sucesso.
-
-400 Bad Request: Dados inválidos ou productId nulo.
-
-422 Unprocessable Entity: O productId informado não existe (validação assíncrona ou síncrona com o Product Service falhou).
-
-2. Buscar Preço Atual do Produto
-GET /prices/products/{productId}/current
-
-Utilizado pelo Order Service para calcular o total do pedido.
-
-Responses:
-
-200 OK:
-
-JSON
-{
-  "priceId": "abc-123",
-  "productId": "123e4567-e89b-12d3-a456-426614174001",
-  "amount": 12500.00,
+  "productId": "uuid",
+  "price": 199.90,
   "currency": "BRL"
 }
-404 Not Found: Preço não encontrado para o produto informado.
+
+---
+
+### Responses
+
+#### 201 Created
+
+{
+  "id": "uuid",
+  "productId": "uuid",
+  "price": 199.90,
+  "currency": "BRL",
+  "active": true,
+  "createdAt": "2026-03-18T10:50:21",
+  "updatedAt": "2026-03-18T10:50:21"
+}
+
+#### 400 Bad Request
+- payload inválido
+
+#### 404 Not Found
+- produto não existe
+
+#### 409 Conflict
+- já existe preço ativo
+
+---
+
+## 2. Buscar preço atual por produto
+
+GET /prices/product/{productId}
+
+Retorna o preço ativo do produto.
+
+---
+
+### Response
+
+#### 200 OK
+
+{
+  "id": "uuid",
+  "productId": "uuid",
+  "price": 199.90,
+  "currency": "BRL",
+  "active": true,
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+
+#### 404 Not Found
+- preço ativo não encontrado
+
+---
+
+## 3. Atualizar preço
+
+PUT /prices/{id}
+
+Atualiza o preço criando uma nova versão.
+
+---
+
+### Comportamento
+
+- desativa o preço atual
+- cria um novo preço com:
+  - novo ID
+  - active = true
+
+---
+
+### Request Body
+
+{
+  "price": 200.00,
+  "currency": "BRL"
+}
+
+---
+
+### Response
+
+#### 200 OK
+
+{
+  "id": "novo-uuid",
+  "productId": "uuid",
+  "price": 200.00,
+  "currency": "BRL",
+  "active": true,
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+
+#### 404 Not Found
+- preço não encontrado
+- produto não existe
+
+---
+
+## 4. Histórico de preços
+
+GET /prices/history/{productId}
+
+Retorna todos os preços do produto.
+
+---
+
+### Response
+
+#### 200 OK
+
+{
+  "productId": "uuid",
+  "prices": [
+    {
+      "id": "uuid",
+      "price": 199.90,
+      "active": false
+    },
+    {
+      "id": "uuid",
+      "price": 200.00,
+      "active": true
+    }
+  ]
+}
+
+#### 404 Not Found
+- produto não existe
+
+---
+
+## Integração com Product Service
+
+O Price Service valida a existência do produto via:
+
+- ProductClient
+- WebClient
+
+Configuração:
+
+services:
+  product-service:
+    url: http://localhost:8081
+
+---
+
+## Observação importante
+
+O Price Service não compartilha preços entre produtos.
+
+Modelo atual:
+
+Product (1) → (N) Price
+
+- preço pertence a um único produto
+- histórico é mantido
+- apenas um ativo por produto

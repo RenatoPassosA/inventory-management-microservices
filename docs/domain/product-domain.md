@@ -2,6 +2,8 @@
 
 O Product Service é responsável pelo gerenciamento do catálogo de produtos.
 
+O domínio foi modelado seguindo princípios de **Clean Architecture**, isolando regras de negócio da camada de transporte (HTTP) e da infraestrutura.
+
 ---
 
 # Entity
@@ -12,12 +14,14 @@ Representa um produto disponível no sistema.
 
 ### Fields
 
-- id
-- name
-- description
-- sku
-- category
-- status
+- id (UUID)
+- name (String)
+- description (String)
+- sku (String)
+- category (String)
+- status (ProductStatus)
+- createdAt (LocalDateTime)
+- updatedAt (LocalDateTime)
 
 ---
 
@@ -36,16 +40,64 @@ O domínio de produto é responsável por:
 
 - criar produtos
 - atualizar produtos
-- listar produtos
+- deletar produtos
+- listar produtos (com paginação)
 - consultar produto por id
-- ativar ou inativar produto
+- consultar produto por SKU
 
 ---
 
 # Domain Rules
 
-Algumas regras importantes:
+Regras de negócio implementadas:
 
 - SKU deve ser único
-- produto inativo não pode ser vendido
 - nome do produto é obrigatório
+- produto deve possuir categoria
+- produto é criado com status ACTIVE por padrão
+- produto deve existir para ser atualizado ou deletado
+
+---
+
+# Repository Contract
+
+O domínio define a interface:
+
+ProductRepository
+
+Responsável por:
+
+- save(Product)
+- findById(UUID)
+- findBySku(String)
+- existsBySku(String)
+- deleteById(UUID)
+- findAll(Pageable)
+
+A implementação dessa interface é feita na camada de infraestrutura.
+
+---
+
+# Application Layer (Use Case)
+
+O domínio é exposto através do `ProductUseCase`, que recebe e retorna objetos desacoplados de HTTP:
+
+## Commands
+
+- CreateProductCommand
+- UpdateProductCommand
+
+## Results
+
+- ProductResult
+
+Esses objetos representam o contrato interno da aplicação.
+
+---
+
+# Architecture Decisions
+
+- O domínio não depende de frameworks
+- O acesso ao banco é abstraído via `ProductRepository`
+- A aplicação utiliza `command/result` ao invés de `request/response`
+- O controller faz a conversão via `WebMapper`

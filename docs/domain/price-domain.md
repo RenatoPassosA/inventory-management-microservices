@@ -1,8 +1,12 @@
 # Price Domain
 
-O Price Service é responsável pelo gerenciamento de preços de produtos.
+O Price Service é responsável pelo gerenciamento de preços de produtos, incluindo histórico e versionamento.
 
-Separar preços do catálogo permite maior flexibilidade de negócio.
+A separação do preço do produto permite:
+
+- rastreabilidade
+- histórico de alterações
+- evolução de regras de negócio
 
 ---
 
@@ -12,44 +16,104 @@ Separar preços do catálogo permite maior flexibilidade de negócio.
 
 #### Fields
 
-- id
-- productId
-- basePrice
-- promotionalPrice
-- effectiveDate
-- active
+- id (UUID)
+- productId (UUID)
+- price (BigDecimal)
+- currency (String)
+- active (boolean)
+- createdAt (LocalDateTime)
+- updatedAt (LocalDateTime)
 
 ---
 
-## Responsibilities
+## Modelagem
 
-- cadastrar preço de produto
-- atualizar preço
-- manter histórico de preços
-- consultar preço atual
-- ativar e desativar preços
+### Relação
 
----
+Product (1) → (N) Price
 
-## Domain Rules
-
-- preço deve estar associado a um produto válido
-- preço não pode ser negativo
+- um produto pode ter vários preços
 - apenas um preço ativo por produto
-- preço promocional não pode ser maior que o preço base
-- um produto pode possuir histórico de preços
 
 ---
 
-## Pricing Logic
+## Responsabilidades
 
-Regra sugerida para preço final:
-
-- se houver `promotionalPrice` ativa, usar ela
-- caso contrário, usar `basePrice`
+- criar preço
+- atualizar preço (versionamento)
+- manter histórico de preços
+- buscar preço atual
+- desativar preço anterior automaticamente
 
 ---
 
-## Notes
+## Regras de Domínio
 
-O Price Service não deve conhecer detalhes internos do catálogo além do `productId` e validação de existência do produto.
+### 1. Produto deve existir
+Validação feita via integração com product-service.
+
+### 2. Preço deve ser válido
+- não pode ser nulo
+- deve ser maior que zero
+
+### 3. Apenas um preço ativo por produto
+Antes de criar um novo preço:
+desativar preço atual → criar novo preço ativo
+
+### 4. Atualização gera novo registro
+O sistema NÃO atualiza o preço existente.
+
+Ele:
+- desativa o atual
+- cria um novo registro
+
+Isso garante:
+- histórico completo
+- rastreabilidade
+
+### 5. Histórico é obrigatório
+Todos os preços permanecem armazenados:
+- active = true → preço atual
+- active = false → histórico
+
+---
+
+## Application Layer
+
+### Entrada HTTP (Adapters)
+
+- CreatePriceRequest
+- UpdatePriceRequest
+- PriceResponse
+- PriceHistoryResponse
+
+### Application
+
+- CreatePriceCommand
+- UpdatePriceCommand
+- PriceResult
+- PriceHistoryResult
+
+### Conversão
+
+- PriceWebMapper (HTTP ↔ Application)
+- PriceMapper (Domain ↔ Result)
+
+---
+
+## Integração com Product Service
+
+- valida existência do produto
+- via ProductClient
+- comunicação REST com WebClient
+
+---
+
+## Limitações atuais
+
+- não suporta múltiplas moedas avançadas
+- não possui price list
+- não possui promoções
+- não possui vigência temporal avançada
+
+---

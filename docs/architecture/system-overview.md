@@ -10,9 +10,8 @@ Este projeto consiste em uma plataforma distribuída para gerenciamento de:
 - preços
 - estoque
 - pedidos
-- autenticação de usuários
 
-O sistema foi projetado utilizando **arquitetura de microsserviços** com **Clean Architecture** aplicada internamente em cada serviço.
+O sistema foi projetado utilizando **arquitetura de microsserviços** com **Clean Architecture** aplicada internamente nos serviços de domínio.
 
 ---
 
@@ -24,8 +23,7 @@ O objetivo principal do projeto é estudar e aplicar conceitos de arquitetura mo
 - banco de dados por serviço
 - comunicação entre serviços via REST
 - API Gateway como ponto único de entrada
-- autenticação baseada em JWT
-- Clean Architecture em cada serviço
+- Clean Architecture nos serviços de domínio
 - orquestração de fluxo de negócio distribuído
 
 ---
@@ -37,7 +35,6 @@ O sistema é composto pelos seguintes serviços principais:
 | Service | Responsibility |
 |------|------|
 | API Gateway | Entrada única do sistema e roteamento |
-| Auth Service | Autenticação e autorização |
 | Product Service | Catálogo de produtos |
 | Price Service | Gerenciamento de preços |
 | Inventory Service | Controle de estoque |
@@ -55,7 +52,7 @@ Arquitetura baseada em:
 - **REST communication**
 - **Clean Architecture**
 
-Cada serviço possui:
+Os serviços de domínio possuem:
 
 - domínio isolado
 - banco de dados próprio
@@ -65,7 +62,7 @@ Cada serviço possui:
 
 ## Internal Architecture
 
-Cada microsserviço segue a estrutura:
+Os serviços de domínio seguem uma organização inspirada em Clean Architecture, com separação entre:
 
 - domain
 - application
@@ -75,16 +72,34 @@ Cada microsserviço segue a estrutura:
 ---
 
 ### Domain
-Contém regras de negócio centrais e entidades.
+
+Contém regras de negócio centrais, entidades e contratos do domínio.
 
 ### Application
-Contém casos de uso e serviços de aplicação.
+
+Contém casos de uso, orquestração da aplicação, commands, results e mapeamentos internos.
 
 ### Adapters
-Controllers e interfaces externas.
+
+Contém controllers, requests, responses e pontos de entrada e saída da aplicação.
 
 ### Infrastructure
-Persistência, segurança, REST clients e configurações.
+
+Contém persistência, configurações, clients REST e implementações técnicas.
+
+---
+
+## API Gateway
+
+O `api-gateway` atua como **camada de borda** do sistema.
+
+Sua responsabilidade é:
+
+- receber requisições externas
+- centralizar a entrada do sistema
+- rotear chamadas para os microsserviços corretos
+
+O gateway **não contém regra de negócio**, **não persiste dados** e **não substitui a comunicação interna entre os microsserviços**.
 
 ---
 
@@ -92,13 +107,29 @@ Persistência, segurança, REST clients e configurações.
 
 O principal fluxo de negócio do sistema é a **criação de pedidos**.
 
-Etapas:
+Etapas gerais do fluxo:
 
-1. Cliente envia requisição
+1. Cliente envia requisição para o gateway
 2. API Gateway recebe a requisição
-3. Gateway encaminha para Order Service
-4. Order valida produto
-5. Order consulta preço
-6. Order solicita reserva de estoque
-7. Pedido é persistido
-8. Resposta é retornada ao cliente
+3. Gateway encaminha para o `order-service`
+4. `order-service` valida a requisição e os itens
+5. `order-service` consulta o `price-service`
+6. `order-service` solicita reserva de estoque ao `inventory-service`
+7. Pedido é criado, confirmado e persistido
+8. Resposta é retornada ao cliente via gateway
+
+---
+
+## Current Scope
+
+Na versão atual do projeto, o foco está em:
+
+- modelagem de uma arquitetura de microsserviços
+- separação de responsabilidades por serviço
+- comunicação síncrona via REST
+- API Gateway funcional
+- fluxo distribuído de criação de pedidos
+- testes automatizados
+- integração contínua
+
+Funcionalidades como autenticação centralizada podem ser tratadas como evolução futura, mas não fazem parte da entrega atual do projeto.

@@ -1,8 +1,10 @@
 # Service Communication
 
-A comunicação entre microsserviços ocorre inicialmente via **REST APIs síncronas**.
+A comunicação entre microsserviços ocorre via **REST APIs síncronas**.
 
-Cada serviço expõe endpoints HTTP para consumo pelos demais serviços.
+Cada serviço expõe endpoints HTTP para consumo pelos demais serviços quando necessário.
+
+O sistema também possui um **API Gateway** como ponto único de entrada para clientes externos, enquanto a comunicação interna entre microsserviços continua sendo feita diretamente entre os serviços responsáveis pelo fluxo de negócio.
 
 ---
 
@@ -11,7 +13,35 @@ Cada serviço expõe endpoints HTTP para consumo pelos demais serviços.
 - baixo acoplamento
 - contratos de API bem definidos
 - independência de banco de dados
-- validação via APIs
+- comunicação via HTTP entre serviços
+- responsabilidade de negócio mantida no serviço dono do domínio
+
+---
+
+# External Access and Internal Communication
+
+## External Access
+
+Clientes externos devem acessar o sistema preferencialmente por meio do gateway.
+
+Exemplos de rotas expostas:
+
+- `/products/**`
+- `/prices/**`
+- `/inventories/**`
+- `/orders/**`
+
+## Internal Communication
+
+A existência do gateway não substitui a comunicação interna entre microsserviços.
+
+Quando necessário, um serviço chama diretamente outro serviço para executar parte do fluxo distribuído.
+
+Exemplos:
+- `order-service` → `price-service`
+- `order-service` → `inventory-service`
+- `price-service` → `product-service`
+- `inventory-service` → `product-service`
 
 ---
 
@@ -19,9 +49,9 @@ Cada serviço expõe endpoints HTTP para consumo pelos demais serviços.
 
 ## Order → Product
 
-Validação de existência de produto.
+Validação de existência de produto durante o fluxo de pedido.
 
-Endpoints utilizados:
+Endpoints possíveis, conforme a implementação adotada:
 
 - `GET /products/{id}`
 - `GET /products/{id}/exists`
@@ -30,61 +60,52 @@ Endpoints utilizados:
 
 ## Order → Price
 
-Consulta preço atual.
+Consulta de preço por produto para composição do pedido.
 
-Endpoint sugerido:
+Endpoint utilizado:
 
-- `GET /prices/products/{productId}/current`
+- `GET /prices/product/{productId}`
 
 ---
 
 ## Order → Inventory
 
-Reserva de estoque.
+Validação de disponibilidade e reserva de estoque durante a criação do pedido.
 
-Endpoint sugerido:
-
-- `POST /inventory/reservations`
-- `DELETE /inventory/reservations/{reservationId}`
+O `order-service` se comunica com o `inventory-service` para verificar estoque e efetivar a reserva necessária para o fluxo do pedido.
 
 ---
 
 ## Price → Product
 
-Validação de produto ao cadastrar preço.
+Validação de produto ao cadastrar ou atualizar preço.
 
-Endpoint sugerido:
+Endpoints possíveis:
 
+- `GET /products/{id}`
 - `GET /products/{id}/exists`
 
 ---
 
 ## Inventory → Product
 
-Validação de produto ao registrar estoque.
+Validação de produto ao registrar ou consultar estoque.
 
-Endpoint sugerido:
+Endpoints possíveis:
 
+- `GET /products/{id}`
 - `GET /products/{id}/exists`
 
 ---
 
-# Future Evolution
-
-Possíveis evoluções futuras:
-
-- comunicação assíncrona
-- event-driven architecture
-- message brokers
-- sagas distribuídas
-
-## Error Handling
+# Error Handling
 
 Cada serviço deve retornar erros padronizados com:
 
 - status HTTP adequado
 - mensagem clara
 - timestamp
+- path da requisição
 - código de erro interno quando necessário
 
 Exemplo de estrutura:

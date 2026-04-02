@@ -1,93 +1,91 @@
-### 📄 `docs/api/inventory-service-endpoints.md`
-
-```markdown
 # Inventory Service API
 
-Responsável pelo controle de saldo e movimentações de estoque.
+Responsável pelo controle de estoque de produtos.
 
-## 1. Adicionar Entrada de Estoque
-`POST /inventory/entries`
+Base URL: /inventories
 
-Adiciona saldo ao estoque de um produto.
+---
 
-**Request Body:**
-```json
+## 1. Criar Inventory
+
+POST /inventories
+
+Request:
 {
-  "productId": "123e4567-e89b-12d3-a456-426614174001",
-  "quantity": 50,
-  "reason": "PURCHASE_RECEIPT"
+  "productId": "uuid"
 }
-Responses:
-
-201 Created: Entrada registrada.
-
-400 Bad Request: Quantidade inválida (ex: menor ou igual a zero).
-
-422 Unprocessable Entity: Produto não existe no Product Service.
-
-2. Consultar Saldo Total de um Produto
-GET /inventory/products/{productId}
-
-Retorna o saldo real e o saldo reservado.
 
 Responses:
+- 201 Created
+- 409 Conflict
+- 404 Not Found
 
-200 OK:
+---
 
-JSON
+## 2. Buscar Inventory por Produto
+
+GET /inventories/product/{productId}
+
+Response:
 {
-  "productId": "123e4567-e89b-12d3-a456-426614174001",
-  "totalQuantity": 50,
-  "reservedQuantity": 5,
-  "availableQuantity": 45
+  "productId": "uuid",
+  "availableQuantity": 50,
+  "reservedQuantity": 10,
+  "totalQuantity": 60
 }
-404 Not Found: Sem registro de estoque para o produto.
 
-3. Consultar Disponibilidade
-GET /inventory/products/{productId}/availability?quantity=2
+---
 
-Validação rápida se há saldo disponível para atender uma requisição.
+## 3. Adicionar Estoque
 
-Responses:
+PATCH /inventories/product/{productId}/add-stock
 
-200 OK:
-
-JSON
+Request:
 {
-  "available": true
+  "quantity": 50
 }
-4. Criar Reserva de Estoque
-POST /inventory/reservations
 
-Acionado pelo Order Service no momento da criação de um pedido.
+---
 
-Request Body:
+## 4. Remover Estoque
 
-JSON
+PATCH /inventories/product/{productId}/remove-stock
+
+Request:
 {
-  "orderId": "ord-789",
-  "items": [
-    {
-      "productId": "123e4567-e89b-12d3-a456-426614174001",
-      "quantity": 2
-    }
-  ]
+  "quantity": 10
 }
-Responses:
 
-201 Created: Reserva efetuada com sucesso. Retorna o ID da reserva.
+---
 
-409 Conflict: Estoque insuficiente para um ou mais produtos (Business Error).
+## 5. Reservar Estoque
 
-400 Bad Request: Estrutura do body inválida.
+PATCH /inventories/product/{productId}/reserve-stock
 
-5. Cancelar/Desfazer Reserva
-DELETE /inventory/reservations/{reservationId}
+Request:
+{
+  "quantity": 5
+}
 
-Acionado se o pagamento falhar ou o pedido for cancelado.
+---
 
-Responses:
+## 6. Liberar Estoque Reservado
 
-204 No Content: Reserva removida, saldo liberado.
+PATCH /inventories/product/{productId}/release-reserved-stock
 
-404 Not Found: Reserva não encontrada.
+Request:
+{
+  "quantity": 3
+}
+
+---
+
+## Error Response
+
+{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Descrição do erro",
+  "details": ["campo: erro"],
+  "timestamp": "2026-03-30T18:00:00Z"
+}
