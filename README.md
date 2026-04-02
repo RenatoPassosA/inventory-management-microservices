@@ -127,8 +127,8 @@ Responsável pela criação e consulta de pedidos. Atua como orquestrador do flu
 ## Como clonar o projeto
 
 ```bash
-git clone <https://github.com/RenatoPassosA/inventory-management-microservices>
-cd <inventory-management-microservices>
+git clone https://github.com/RenatoPassosA/inventory-management-microservices
+cd inventory-management-microservices
 ```
 
 Substitua os valores acima pela URL e pelo nome real do seu repositório no GitHub.
@@ -339,3 +339,28 @@ Como evolução futura, o projeto pode receber:
 - deploy em nuvem
 
 ---
+
+Para mais detalhes técnicos sobre a arquitetura, os serviços, os fluxos do sistema e os endpoints das APIs, consulte a documentação disponível na pasta `docs/`.
+
+## Documentação
+
+A documentação do projeto está disponível na pasta `docs/`.
+
+### Arquitetura
+- [Visão Geral do Sistema](./docs/architecture/system-overview.md)
+- [Responsabilidades dos Serviços](./docs/architecture/service-responsibilities.md)
+- [Fluxo de Pedidos](./docs/architecture/order-flow.md)
+- [Comunicação entre Serviços](./docs/architecture/communication.md)
+
+### APIs
+- [Endpoints do Product Service](./docs/api/product-service-endpoints.md)
+- [Endpoints do Price Service](./docs/api/price-service-endpoints.md)
+- [Endpoints do Inventory Service](./docs/api/inventory-service-endpoints.md)
+- [Endpoints do Order Service](./docs/api/order-service-endpoints.md)
+
+### Domínio
+- [Domínio de Produto](./docs/domain/product-domain.md)
+- [Domínio de Preço](./docs/domain/price-domain.md)
+- [Domínio de Estoque](./docs/domain/inventory-domain.md)
+- [Domínio de Pedido](./docs/domain/order-domain.md)
+
